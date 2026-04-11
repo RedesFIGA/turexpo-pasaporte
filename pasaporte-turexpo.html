@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Pasaporte Turexpo Galicia</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #185FA5;
+      --blue:   #378ADD;
+      --bgblue: #E6F1FB;
+      --white:  #ffffff;
+      --text:   #1a2e42;
+      --muted:  #5a7a99;
+      --border: #c0d8f0;
+      --red:    #c0392b;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #b8cfe8;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    #app {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100vh;
+      background: var(--bgblue);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+    .screen.active {
+      display: flex;
+      animation: fadeSlide 0.3s ease;
+    }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── WELCOME ── */
+    #screen-welcome {
+      background: linear-gradient(160deg, var(--navy) 0%, var(--blue) 60%, var(--navy) 100%);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 48px 28px;
+      position: relative;
+      overflow: hidden;
+      color: var(--white);
+    }
+    #screen-welcome::before {
+      content: '';
+      position: absolute; top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      border: 3px solid rgba(255,255,255,.12); border-radius: 50%;
+    }
+    #screen-welcome::after {
+      content: '';
+      position: absolute; bottom: -90px; left: -90px;
+      width: 320px; height: 320px;
+      border: 3px solid rgba(255,255,255,.08); border-radius: 50%;
+    }
+
+    .passport-book {
+      width: 148px; height: 188px;
+      background: linear-gradient(135deg, var(--navy), #0d3d70);
+      border-radius: 8px 18px 18px 8px;
+      margin: 0 auto 28px;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      box-shadow: -4px 4px 22px rgba(0,0,0,.45), inset 2px 0 8px rgba(0,0,0,.25);
+      border-left: 6px solid #0a2e56;
+      position: relative; z-index: 1;
+    }
+    .pb-icon  { font-size: 44px; margin-bottom: 8px; }
+    .pb-label {
+      font-size: 9px; font-weight: 800; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--white);
+      text-align: center; padding: 0 10px; line-height: 1.5;
+      opacity: .92;
+    }
+    .pb-year {
+      font-size: 13px; font-weight: 700; color: rgba(255,255,255,.75);
+      margin-top: 4px; letter-spacing: 1px;
+    }
+
+    .welcome-logo {
+      font-size: 13px; font-weight: 800; letter-spacing: 3px;
+      text-transform: uppercase; color: rgba(255,255,255,.65);
+      margin-bottom: 6px; position: relative; z-index: 1;
+    }
+    .welcome-title {
+      font-size: 26px; font-weight: 800; color: var(--white);
+      margin-bottom: 8px; position: relative; z-index: 1;
+    }
+    .welcome-sub {
+      font-size: 14px; color: rgba(255,255,255,.78);
+      margin-bottom: 42px; position: relative; z-index: 1; line-height: 1.55;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: block; width: 100%; border: none; cursor: pointer;
+      border-radius: 50px; font-weight: 700; font-size: 15px;
+      padding: 15px 24px; text-align: center;
+      transition: transform .1s, opacity .15s;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-white {
+      background: var(--white); color: var(--navy);
+      box-shadow: 0 4px 14px rgba(0,0,0,.2);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-navy {
+      background: var(--navy); color: var(--white);
+      box-shadow: 0 4px 12px rgba(24,95,165,.35);
+    }
+    .btn-blue {
+      background: var(--blue); color: var(--white);
+      box-shadow: 0 4px 12px rgba(55,138,221,.35);
+    }
+    .btn-ghost {
+      background: transparent;
+      border: 2px solid rgba(255,255,255,.55);
+      color: var(--white);
+    }
+    .btn.disabled { opacity: .4; pointer-events: none; }
+
+    /* ── SCREEN HEADER ── */
+    .scr-header {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      padding: 52px 22px 26px; color: var(--white);
+    }
+    .scr-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .scr-header p  { font-size: 13px; opacity: .8; }
+    .scr-body { padding: 22px; flex: 1; }
+
+    /* ── FORM ── */
+    .f-group { margin-bottom: 18px; }
+    .f-group label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: var(--navy); margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .f-group input[type=text],
+    .f-group input[type=tel] {
+      width: 100%; padding: 13px 15px;
+      border: 2px solid var(--border); border-radius: 12px;
+      font-size: 16px; color: var(--text); background: var(--white);
+      outline: none; transition: border-color .2s;
+    }
+    .f-group input:focus { border-color: var(--blue); }
+    .f-group input.err   { border-color: var(--red); }
+    .err-msg { color: var(--red); font-size: 12px; margin-top: 5px; min-height: 16px; }
+
+    .privacy-row {
+      display: flex; align-items: flex-start; gap: 11px;
+      background: var(--white); padding: 14px; border-radius: 12px;
+      border: 2px solid var(--border); margin-bottom: 8px;
+    }
+    .privacy-row input[type=checkbox] {
+      width: 20px; height: 20px; accent-color: var(--navy);
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .privacy-row label { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .privacy-row a { color: var(--blue); }
+
+    /* ── CATEGORY ── */
+    .cat-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; padding: 18px 18px 24px;
+    }
+    .cat-card {
+      background: var(--white); border-radius: 16px;
+      padding: 18px 10px; text-align: center;
+      cursor: pointer; border: 3px solid transparent;
+      box-shadow: 0 2px 8px rgba(24,95,165,.08);
+      transition: transform .15s, border-color .15s, background .15s;
+    }
+    .cat-card:active { transform: scale(.96); }
+    .cat-card.selected {
+      border-color: var(--blue);
+      background: var(--bgblue);
+    }
+    .cat-icon { font-size: 36px; margin-bottom: 7px; }
+    .cat-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .cat-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ── STANDS ── */
+    .stands-toolbar {
+      display: flex; gap: 10px; padding: 14px 18px;
+    }
+    .btn-random {
+      flex: 1; background: var(--blue); color: var(--white);
+      border: none; padding: 12px; border-radius: 12px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn-random:active { opacity: .85; }
+    .sel-counter {
+      display: flex; align-items: center; justify-content: center;
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: 12px; padding: 10px 14px;
+      font-size: 12px; font-weight: 600; color: var(--text); min-width: 70px;
+    }
+    .sel-counter span { color: var(--navy); font-size: 20px; font-weight: 800; margin-right: 2px; }
+
+    .stands-list { padding: 0 18px; flex: 1; overflow-y: auto; padding-bottom: 8px; }
+    .stand-row {
+      background: var(--white); border-radius: 13px; padding: 13px 14px;
+      margin-bottom: 9px; display: flex; align-items: center; gap: 11px;
+      cursor: pointer; border: 2px solid var(--border);
+      transition: border-color .15s, background .15s;
+    }
+    .stand-row.sel { border-color: var(--blue); background: var(--bgblue); }
+    .stand-row.dim { opacity: .4; pointer-events: none; }
+    .chk {
+      width: 24px; height: 24px; border: 2px solid var(--border);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0;
+      font-size: 13px; transition: all .15s; color: transparent;
+    }
+    .stand-row.sel .chk { background: var(--blue); border-color: var(--blue); color: var(--white); }
+    .stand-row-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .stand-row-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .stands-footer {
+      padding: 14px 18px;
+      background: var(--bgblue);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── PASSPORT ── */
+    #screen-passport { background: var(--bgblue); }
+
+    .pp-header {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      padding: 48px 20px 22px; color: var(--white);
+    }
+    .pp-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .pp-label { font-size: 11px; opacity: .7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+    .pp-name  { font-size: 19px; font-weight: 700; }
+    .cat-badge {
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; background: rgba(255,255,255,.2); color: var(--white);
+      border: 1px solid rgba(255,255,255,.35);
+    }
+
+    .prog-label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: rgba(255,255,255,.8); margin-bottom: 7px;
+    }
+    .prog-bg   { height: 7px; background: rgba(255,255,255,.2); border-radius: 10px; overflow: hidden; }
+    .prog-fill {
+      height: 100%; background: var(--white);
+      border-radius: 10px; transition: width .5s ease;
+    }
+
+    .pp-body { padding: 18px; flex: 1; overflow-y: auto; }
+    .pp-hint {
+      font-size: 12px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .8px; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    .stamp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+    .stamp-card {
+      background: var(--white); border-radius: 14px;
+      border: 2px dashed var(--border);
+      padding: 14px 10px; text-align: center;
+      cursor: pointer; position: relative; overflow: hidden;
+      min-height: 110px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      transition: transform .15s;
+    }
+    .stamp-card:active:not(.done) { transform: scale(.96); background: var(--bgblue); }
+    .stamp-card.done { cursor: default; }
+
+    .sc-num  {
+      position: absolute; top: 5px; left: 9px;
+      font-size: 10px; font-weight: 700; color: var(--border);
+    }
+    .sc-ico  { font-size: 26px; }
+    .sc-name { font-size: 11px; font-weight: 600; color: var(--text); margin-top: 5px; line-height: 1.3; }
+    .sc-sub  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .sc-hint { font-size: 9px; color: var(--muted); margin-top: 5px; }
+
+    .stamp-overlay {
+      position: absolute; inset: 0;
+      display: flex; justify-content: center; align-items: center;
+      opacity: 0; transition: opacity .25s;
+    }
+    .stamp-card.done .stamp-overlay { opacity: 1; }
+
+    .stamp-seal {
+      width: 78px; height: 78px;
+      border: 4px solid var(--navy); border-radius: 50%;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      transform: rotate(-12deg);
+      background: rgba(24,95,165,.05);
+    }
+    .seal-txt { font-size: 7px; font-weight: 900; color: var(--navy); letter-spacing: 2px; text-transform: uppercase; }
+    .seal-ico { font-size: 20px; margin: 2px 0; }
+
+    @keyframes stampIn {
+      0%   { transform: rotate(-12deg) scale(2.2); opacity: 0; }
+      55%  { transform: rotate(-12deg) scale(.88); opacity: 1; }
+      100% { transform: rotate(-12deg) scale(1);   opacity: 1; }
+    }
+    .stamp-card.done .stamp-seal { animation: stampIn .45s ease forwards; }
+
+    /* ── MODAL ── */
+    .modal-bg {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55); z-index: 200;
+      display: none; justify-content: center; align-items: flex-end;
+    }
+    .modal-bg.open { display: flex; }
+
+    .modal {
+      background: var(--white); border-radius: 24px 24px 0 0;
+      padding: 18px 22px 36px; width: 100%; max-width: 430px;
+      animation: slideUp .28s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .modal-handle {
+      width: 38px; height: 4px; background: #ddd;
+      border-radius: 2px; margin: 0 auto 18px;
+    }
+    .modal-stand { font-size: 17px; font-weight: 700; color: var(--text); text-align: center; margin-bottom: 4px; }
+    .modal-sub   { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 20px; }
+
+    .digits-row { display: flex; gap: 9px; justify-content: center; margin-bottom: 14px; }
+    .digit-box {
+      width: 58px; height: 66px;
+      border: 2px solid var(--border); border-radius: 12px;
+      font-size: 26px; font-weight: 700;
+      text-align: center; color: var(--text);
+      background: var(--bgblue); outline: none; pointer-events: none;
+    }
+    .digit-box.shake { border-color: var(--red); animation: shake .3s ease; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%     { transform: translateX(-6px); }
+      75%     { transform: translateX(6px); }
+    }
+
+    .modal-err { text-align: center; color: var(--red); font-size: 12px; margin-bottom: 10px; min-height: 16px; }
+
+    .numpad {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 7px; margin-bottom: 14px;
+    }
+    .np-btn {
+      background: var(--bgblue); border: none; border-radius: 10px;
+      padding: 15px; font-size: 19px; font-weight: 600;
+      color: var(--text); cursor: pointer; transition: background .1s;
+    }
+    .np-btn:active { background: #c8dff5; }
+    .np-del   { color: var(--red); }
+    .np-close { font-size: 14px; color: var(--muted); }
+
+    /* ── COMPLETE ── */
+    #screen-complete {
+      background: linear-gradient(160deg, var(--navy) 0%, var(--blue) 100%);
+      justify-content: center; align-items: center;
+      text-align: center; padding: 40px 28px; color: var(--white);
+    }
+    .done-big  { font-size: 80px; animation: bounceIn .6s ease; margin-bottom: 18px; }
+    @keyframes bounceIn {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .done-title { font-size: 26px; font-weight: 800; color: var(--white); margin-bottom: 10px; }
+    .done-user  { font-size: 20px; font-weight: 700; color: var(--white); margin: 4px 0 20px; opacity: .9; }
+    .done-body  { font-size: 14px; color: rgba(255,255,255,.85); line-height: 1.55; margin-bottom: 20px; }
+    .raffle-box {
+      background: rgba(255,255,255,.12);
+      border: 2px solid rgba(255,255,255,.25);
+      border-radius: 16px; padding: 18px; margin-bottom: 28px;
+    }
+    .raffle-box .r-ico { font-size: 34px; margin-bottom: 8px; }
+    .raffle-box p { font-size: 13px; color: rgba(255,255,255,.9); line-height: 1.55; }
+
+    /* ── SOCIAL ── */
+    #screen-social { background: var(--bgblue); }
+
+    .social-intro {
+      font-size: 14px; color: var(--muted); line-height: 1.55;
+      margin-bottom: 24px; text-align: center;
+    }
+    .social-intro strong { color: var(--navy); }
+
+    .social-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+
+    .social-btn {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
+      text-decoration: none; cursor: pointer;
+      transition: border-color .15s, background .15s, transform .1s;
+      position: relative;
+    }
+    .social-btn:active { transform: scale(.98); }
+    .social-btn.visited {
+      border-color: #22a85a;
+      background: #f0fdf5;
+    }
+    .social-logo {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .social-info { flex: 1; }
+    .social-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .social-handle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .social-tick {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #22a85a; color: #fff;
+      display: none; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+    }
+    .social-btn.visited .social-tick { display: flex; }
+
+    .social-min-hint {
+      font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 16px;
+    }
+    .social-min-hint span { color: #22a85a; font-weight: 700; }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══════════ WELCOME ═══════════ -->
+  <div class="screen active" id="screen-welcome">
+    <div class="passport-book">
+      <div class="pb-icon">✈️</div>
+      <div class="pb-label">Turexpo<br>Galicia</div>
+      <div class="pb-year">2026</div>
+    </div>
+    <div class="welcome-logo">Turexpo Galicia</div>
+    <h1 class="welcome-title">Pasaporte Turexpo</h1>
+    <p class="welcome-sub">Tu aventura comienza aquí.<br>Colecciona 10 sellos y participa en el sorteo.</p>
+    <button class="btn btn-white" onclick="go('register')">Comenzar aventura</button>
+  </div>
+
+  <!-- ═══════════ REGISTER ═══════════ -->
+  <div class="screen" id="screen-register">
+    <div class="scr-header">
+      <h2>Crea tu pasaporte</h2>
+      <p>Introduce tus datos para comenzar</p>
+    </div>
+    <div class="scr-body">
+      <div class="f-group">
+        <label for="inp-name">Nombre completo</label>
+        <input type="text" id="inp-name" placeholder="Ej: María García" autocomplete="name">
+        <div class="err-msg" id="err-name"></div>
+      </div>
+      <div class="f-group">
+        <label for="inp-phone">Teléfono</label>
+        <input type="tel" id="inp-phone" placeholder="Ej: 612 345 678" autocomplete="tel">
+        <div class="err-msg" id="err-phone"></div>
+      </div>
+      <div class="privacy-row">
+        <input type="checkbox" id="priv-chk">
+        <label for="priv-chk">
+          Acepto el <a href="#">aviso de privacidad</a> y consiento el tratamiento de mis datos para participar en el sorteo de Turexpo Galicia 2026.
+        </label>
+      </div>
+      <div class="err-msg" id="err-priv" style="margin-bottom:16px"></div>
+      <button class="btn btn-navy" onclick="submitRegister()">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SOCIAL ═══════════ -->
+  <div class="screen" id="screen-social">
+    <div class="scr-header">
+      <h2>Síguenos en redes</h2>
+      <p>Visita al menos una red social para continuar</p>
+    </div>
+    <div class="scr-body">
+      <p class="social-intro">
+        Sigue a <strong>Turexpo Galicia</strong> en redes sociales y mantente al día de todas las novedades de la feria.
+      </p>
+      <div class="social-list">
+        <a class="social-btn" id="soc-instagram"
+           href="https://www.instagram.com/turexpo_galicia/" target="_blank" rel="noopener"
+           onclick="markSocial('instagram')">
+          <div class="social-logo" style="background:#fce4ec">📸</div>
+          <div class="social-info">
+            <div class="social-name">Instagram</div>
+            <div class="social-handle">@turexpo_galicia</div>
+          </div>
+          <div class="social-tick">✓</div>
+        </a>
+        <a class="social-btn" id="soc-facebook"
+           href="https://www.facebook.com/turexpo?locale=es_ES" target="_blank" rel="noopener"
+           onclick="markSocial('facebook')">
+          <div class="social-logo" style="background:#e3f2fd">👍</div>
+          <div class="social-info">
+            <div class="social-name">Facebook</div>
+            <div class="social-handle">facebook.com/turexpo</div>
+          </div>
+          <div class="social-tick">✓</div>
+        </a>
+        <a class="social-btn" id="soc-twitter"
+           href="https://x.com/Turexpo" target="_blank" rel="noopener"
+           onclick="markSocial('twitter')">
+          <div class="social-logo" style="background:#e8eaf6">✖️</div>
+          <div class="social-info">
+            <div class="social-name">Twitter / X</div>
+            <div class="social-handle">@Turexpo</div>
+          </div>
+          <div class="social-tick">✓</div>
+        </a>
+        <a class="social-btn" id="soc-linkedin"
+           href="https://www.linkedin.com/company/turexpo-galicia/" target="_blank" rel="noopener"
+           onclick="markSocial('linkedin')">
+          <div class="social-logo" style="background:#e1f0f8">💼</div>
+          <div class="social-info">
+            <div class="social-name">LinkedIn</div>
+            <div class="social-handle">turexpo-galicia</div>
+          </div>
+          <div class="social-tick">✓</div>
+        </a>
+        <a class="social-btn" id="soc-tiktok"
+           href="https://www.tiktok.com/@turexpo_galicia" target="_blank" rel="noopener"
+           onclick="markSocial('tiktok')">
+          <div class="social-logo" style="background:#f3e5f5">🎵</div>
+          <div class="social-info">
+            <div class="social-name">TikTok</div>
+            <div class="social-handle">@turexpo_galicia</div>
+          </div>
+          <div class="social-tick">✓</div>
+        </a>
+      </div>
+      <div class="social-min-hint" id="social-hint">
+        Pulsa al menos <span>1 red social</span> para continuar
+      </div>
+      <button class="btn btn-navy disabled" id="btn-social" onclick="go('category')">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ CATEGORY ═══════════ -->
+  <div class="screen" id="screen-category">
+    <div class="scr-header">
+      <h2>¿Cuál es tu estilo de viaje?</h2>
+      <p>Elige la categoría que mejor te define</p>
+    </div>
+    <div class="cat-grid" id="cat-grid">
+      <!-- Las tarjetas de categoría se generan automáticamente desde CONFIG -->
+    </div>
+    <div style="padding:0 18px 28px">
+      <button class="btn btn-navy disabled" id="btn-cat" onclick="submitCat()">Continuar →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ STANDS ═══════════ -->
+  <div class="screen" id="screen-stands">
+    <div class="scr-header">
+      <h2 id="stands-title">Elige tus stands</h2>
+      <p>Selecciona exactamente 10 stands a visitar</p>
+    </div>
+    <div class="stands-toolbar">
+      <button class="btn-random" onclick="randomStands()">🎲 Asignación aleatoria</button>
+      <div class="sel-counter"><span id="sel-count">0</span>/10</div>
+    </div>
+    <div class="stands-list" id="stands-list"></div>
+    <div class="stands-footer">
+      <button class="btn btn-navy disabled" id="btn-confirm" onclick="confirmStands()">Confirmar selección →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ PASSPORT ═══════════ -->
+  <div class="screen" id="screen-passport">
+    <div class="pp-header">
+      <div class="pp-top">
+        <div>
+          <div class="pp-label">Viajero</div>
+          <div class="pp-name" id="pp-name"></div>
+        </div>
+        <div class="cat-badge" id="pp-badge"></div>
+      </div>
+      <div class="prog-label">
+        <span>Sellos conseguidos</span>
+        <span id="prog-txt">0 / 10</span>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+    </div>
+    <div class="pp-body">
+      <div class="pp-hint"><span>📍</span> Toca un stand para introducir su código</div>
+      <div class="stamp-grid" id="stamp-grid"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ COMPLETE ═══════════ -->
+  <div class="screen" id="screen-complete">
+    <div class="done-big">🎉</div>
+    <div class="done-title">¡Pasaporte completo!</div>
+    <div class="done-body">¡Enhorabuena,</div>
+    <div class="done-user" id="done-name"></div>
+    <div class="done-body">Has completado los 10 sellos y estás inscrito en el sorteo.</div>
+    <div class="raffle-box">
+      <div class="r-ico">🏆</div>
+      <p>Participas en el <strong>Gran Sorteo Turexpo Galicia 2026</strong>.<br><br>
+         El ganador será contactado al número registrado. ¡Mucha suerte!</p>
+    </div>
+    <button class="btn btn-ghost" onclick="resetApp()">Nueva inscripción</button>
+  </div>
+
+  <!-- ═══════════ MODAL CÓDIGO ═══════════ -->
+  <div class="modal-bg" id="modal-bg" onclick="bgClose(event)">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div class="modal-stand" id="modal-stand"></div>
+      <div class="modal-sub">Introduce el código de 4 dígitos del stand</div>
+      <div class="digits-row">
+        <input class="digit-box" id="d1" readonly>
+        <input class="digit-box" id="d2" readonly>
+        <input class="digit-box" id="d3" readonly>
+        <input class="digit-box" id="d4" readonly>
+      </div>
+      <div class="modal-err" id="modal-err"></div>
+      <div class="numpad">
+        <button class="np-btn" onclick="npPress('1')">1</button>
+        <button class="np-btn" onclick="npPress('2')">2</button>
+        <button class="np-btn" onclick="npPress('3')">3</button>
+        <button class="np-btn" onclick="npPress('4')">4</button>
+        <button class="np-btn" onclick="npPress('5')">5</button>
+        <button class="np-btn" onclick="npPress('6')">6</button>
+        <button class="np-btn" onclick="npPress('7')">7</button>
+        <button class="np-btn" onclick="npPress('8')">8</button>
+        <button class="np-btn" onclick="npPress('9')">9</button>
+        <button class="np-btn np-del" onclick="npDel()">⌫</button>
+        <button class="np-btn" onclick="npPress('0')">0</button>
+        <button class="np-btn np-close" onclick="closeModal()">✕</button>
+      </div>
+      <button class="btn btn-navy" onclick="verifyCode()">Verificar sello</button>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+/* ╔══════════════════════════════════════════════════════════╗
+   ║            ★  ZONA DE CONFIGURACIÓN  ★                  ║
+   ║  Todo lo que necesitas editar está aquí arriba.          ║
+   ║  El resto del código se genera solo a partir de estos    ║
+   ║  datos; no hay que tocar nada más.                       ║
+   ╠══════════════════════════════════════════════════════════╣
+   ║  CATEGORÍAS                                              ║
+   ║  ─ Para añadir una: copia un bloque y ponle un id único. ║
+   ║  ─ Para quitar una: borra o comenta su bloque completo.  ║
+   ║  Campos:                                                 ║
+   ║    id   → clave interna (sin espacios, sin tildes)       ║
+   ║    name → nombre visible                                 ║
+   ║    icon → emoji                                          ║
+   ║    desc → descripción corta                              ║
+   ╠══════════════════════════════════════════════════════════╣
+   ║  STANDS                                                  ║
+   ║  Cuando se conozcan los expositores reales, edita los    ║
+   ║  arrays de cada categoría. Campos de cada stand:         ║
+   ║    id  → identificador único (no cambiar una vez en uso) ║
+   ║    n   → nombre del expositor / stand                    ║
+   ║    sub → descripción breve                               ║
+   ║    c   → código de 4 dígitos para el visitante           ║
+   ║    i   → emoji representativo                            ║
+   ║  Mínimo 10 stands por categoría (se eligen 10 de ellos). ║
+   ╚══════════════════════════════════════════════════════════╝ */
+
+const CONFIG = [
+  // ── FOODIE ───────────────────────────────────────────────
+  {
+    id: 'foodie', name: 'Foodie', icon: '🍽️', desc: 'Gastronomía y sabores',
+    stands: [
+      {id:'fo01', n:'Stand 1',  sub:'Categoría Foodie', c:'1101', i:'🍽️'},
+      {id:'fo02', n:'Stand 2',  sub:'Categoría Foodie', c:'1102', i:'🍽️'},
+      {id:'fo03', n:'Stand 3',  sub:'Categoría Foodie', c:'1103', i:'🍽️'},
+      {id:'fo04', n:'Stand 4',  sub:'Categoría Foodie', c:'1104', i:'🍽️'},
+      {id:'fo05', n:'Stand 5',  sub:'Categoría Foodie', c:'1105', i:'🍽️'},
+      {id:'fo06', n:'Stand 6',  sub:'Categoría Foodie', c:'1106', i:'🍽️'},
+      {id:'fo07', n:'Stand 7',  sub:'Categoría Foodie', c:'1107', i:'🍽️'},
+      {id:'fo08', n:'Stand 8',  sub:'Categoría Foodie', c:'1108', i:'🍽️'},
+      {id:'fo09', n:'Stand 9',  sub:'Categoría Foodie', c:'1109', i:'🍽️'},
+      {id:'fo10', n:'Stand 10', sub:'Categoría Foodie', c:'1110', i:'🍽️'},
+      {id:'fo11', n:'Stand 11', sub:'Categoría Foodie', c:'1111', i:'🍽️'},
+      {id:'fo12', n:'Stand 12', sub:'Categoría Foodie', c:'1112', i:'🍽️'},
+    ]
+  },
+  // ── AVENTURA ─────────────────────────────────────────────
+  {
+    id: 'aventura', name: 'Aventura', icon: '🏔️', desc: 'Adrenalina y naturaleza',
+    stands: [
+      {id:'av01', n:'Stand 1',  sub:'Categoría Aventura', c:'2201', i:'🏔️'},
+      {id:'av02', n:'Stand 2',  sub:'Categoría Aventura', c:'2202', i:'🏔️'},
+      {id:'av03', n:'Stand 3',  sub:'Categoría Aventura', c:'2203', i:'🏔️'},
+      {id:'av04', n:'Stand 4',  sub:'Categoría Aventura', c:'2204', i:'🏔️'},
+      {id:'av05', n:'Stand 5',  sub:'Categoría Aventura', c:'2205', i:'🏔️'},
+      {id:'av06', n:'Stand 6',  sub:'Categoría Aventura', c:'2206', i:'🏔️'},
+      {id:'av07', n:'Stand 7',  sub:'Categoría Aventura', c:'2207', i:'🏔️'},
+      {id:'av08', n:'Stand 8',  sub:'Categoría Aventura', c:'2208', i:'🏔️'},
+      {id:'av09', n:'Stand 9',  sub:'Categoría Aventura', c:'2209', i:'🏔️'},
+      {id:'av10', n:'Stand 10', sub:'Categoría Aventura', c:'2210', i:'🏔️'},
+      {id:'av11', n:'Stand 11', sub:'Categoría Aventura', c:'2211', i:'🏔️'},
+      {id:'av12', n:'Stand 12', sub:'Categoría Aventura', c:'2212', i:'🏔️'},
+    ]
+  },
+  // ── FAMILIAR ─────────────────────────────────────────────
+  {
+    id: 'familiar', name: 'Familiar', icon: '👨‍👩‍👧', desc: 'Para toda la familia',
+    stands: [
+      {id:'fa01', n:'Stand 1',  sub:'Categoría Familiar', c:'3301', i:'👨‍👩‍👧'},
+      {id:'fa02', n:'Stand 2',  sub:'Categoría Familiar', c:'3302', i:'👨‍👩‍👧'},
+      {id:'fa03', n:'Stand 3',  sub:'Categoría Familiar', c:'3303', i:'👨‍👩‍👧'},
+      {id:'fa04', n:'Stand 4',  sub:'Categoría Familiar', c:'3304', i:'👨‍👩‍👧'},
+      {id:'fa05', n:'Stand 5',  sub:'Categoría Familiar', c:'3305', i:'👨‍👩‍👧'},
+      {id:'fa06', n:'Stand 6',  sub:'Categoría Familiar', c:'3306', i:'👨‍👩‍👧'},
+      {id:'fa07', n:'Stand 7',  sub:'Categoría Familiar', c:'3307', i:'👨‍👩‍👧'},
+      {id:'fa08', n:'Stand 8',  sub:'Categoría Familiar', c:'3308', i:'👨‍👩‍👧'},
+      {id:'fa09', n:'Stand 9',  sub:'Categoría Familiar', c:'3309', i:'👨‍👩‍👧'},
+      {id:'fa10', n:'Stand 10', sub:'Categoría Familiar', c:'3310', i:'👨‍👩‍👧'},
+      {id:'fa11', n:'Stand 11', sub:'Categoría Familiar', c:'3311', i:'👨‍👩‍👧'},
+      {id:'fa12', n:'Stand 12', sub:'Categoría Familiar', c:'3312', i:'👨‍👩‍👧'},
+    ]
+  },
+  // ── PAREJAS ──────────────────────────────────────────────
+  {
+    id: 'parejas', name: 'Parejas', icon: '❤️', desc: 'Escapadas románticas',
+    stands: [
+      {id:'pa01', n:'Stand 1',  sub:'Categoría Parejas', c:'4401', i:'❤️'},
+      {id:'pa02', n:'Stand 2',  sub:'Categoría Parejas', c:'4402', i:'❤️'},
+      {id:'pa03', n:'Stand 3',  sub:'Categoría Parejas', c:'4403', i:'❤️'},
+      {id:'pa04', n:'Stand 4',  sub:'Categoría Parejas', c:'4404', i:'❤️'},
+      {id:'pa05', n:'Stand 5',  sub:'Categoría Parejas', c:'4405', i:'❤️'},
+      {id:'pa06', n:'Stand 6',  sub:'Categoría Parejas', c:'4406', i:'❤️'},
+      {id:'pa07', n:'Stand 7',  sub:'Categoría Parejas', c:'4407', i:'❤️'},
+      {id:'pa08', n:'Stand 8',  sub:'Categoría Parejas', c:'4408', i:'❤️'},
+      {id:'pa09', n:'Stand 9',  sub:'Categoría Parejas', c:'4409', i:'❤️'},
+      {id:'pa10', n:'Stand 10', sub:'Categoría Parejas', c:'4410', i:'❤️'},
+      {id:'pa11', n:'Stand 11', sub:'Categoría Parejas', c:'4411', i:'❤️'},
+      {id:'pa12', n:'Stand 12', sub:'Categoría Parejas', c:'4412', i:'❤️'},
+    ]
+  },
+  // ── CULTURAL ─────────────────────────────────────────────
+  {
+    id: 'cultural', name: 'Cultural', icon: '🏛️', desc: 'Historia y patrimonio',
+    stands: [
+      {id:'cu01', n:'Stand 1',  sub:'Categoría Cultural', c:'5501', i:'🏛️'},
+      {id:'cu02', n:'Stand 2',  sub:'Categoría Cultural', c:'5502', i:'🏛️'},
+      {id:'cu03', n:'Stand 3',  sub:'Categoría Cultural', c:'5503', i:'🏛️'},
+      {id:'cu04', n:'Stand 4',  sub:'Categoría Cultural', c:'5504', i:'🏛️'},
+      {id:'cu05', n:'Stand 5',  sub:'Categoría Cultural', c:'5505', i:'🏛️'},
+      {id:'cu06', n:'Stand 6',  sub:'Categoría Cultural', c:'5506', i:'🏛️'},
+      {id:'cu07', n:'Stand 7',  sub:'Categoría Cultural', c:'5507', i:'🏛️'},
+      {id:'cu08', n:'Stand 8',  sub:'Categoría Cultural', c:'5508', i:'🏛️'},
+      {id:'cu09', n:'Stand 9',  sub:'Categoría Cultural', c:'5509', i:'🏛️'},
+      {id:'cu10', n:'Stand 10', sub:'Categoría Cultural', c:'5510', i:'🏛️'},
+      {id:'cu11', n:'Stand 11', sub:'Categoría Cultural', c:'5511', i:'🏛️'},
+      {id:'cu12', n:'Stand 12', sub:'Categoría Cultural', c:'5512', i:'🏛️'},
+    ]
+  },
+  // ── RURAL ────────────────────────────────────────────────
+  {
+    id: 'rural', name: 'Rural', icon: '🌾', desc: 'Tradición y naturaleza',
+    stands: [
+      {id:'ru01', n:'Stand 1',  sub:'Categoría Rural', c:'6601', i:'🌾'},
+      {id:'ru02', n:'Stand 2',  sub:'Categoría Rural', c:'6602', i:'🌾'},
+      {id:'ru03', n:'Stand 3',  sub:'Categoría Rural', c:'6603', i:'🌾'},
+      {id:'ru04', n:'Stand 4',  sub:'Categoría Rural', c:'6604', i:'🌾'},
+      {id:'ru05', n:'Stand 5',  sub:'Categoría Rural', c:'6605', i:'🌾'},
+      {id:'ru06', n:'Stand 6',  sub:'Categoría Rural', c:'6606', i:'🌾'},
+      {id:'ru07', n:'Stand 7',  sub:'Categoría Rural', c:'6607', i:'🌾'},
+      {id:'ru08', n:'Stand 8',  sub:'Categoría Rural', c:'6608', i:'🌾'},
+      {id:'ru09', n:'Stand 9',  sub:'Categoría Rural', c:'6609', i:'🌾'},
+      {id:'ru10', n:'Stand 10', sub:'Categoría Rural', c:'6610', i:'🌾'},
+      {id:'ru11', n:'Stand 11', sub:'Categoría Rural', c:'6611', i:'🌾'},
+      {id:'ru12', n:'Stand 12', sub:'Categoría Rural', c:'6612', i:'🌾'},
+    ]
+  },
+];
+/* ╚══ FIN ZONA DE CONFIGURACIÓN ══════════════════════════════╝ */
+
+/* ═══════════════════════════════════════
+   SUPABASE — cliente
+═══════════════════════════════════════ */
+const SUPABASE_URL = 'https://anscixtznmawcqbfadww.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuc2NpeHR6bm1hd2NxYmZhZHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MDAyMzMsImV4cCI6MjA5MTQ3NjIzM30.yKJytwYjy4wUcCl8ez9exODmN3PC9v50yRnVBs-hyP0';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Índices derivados automáticamente — no editar
+const STANDS    = Object.fromEntries(CONFIG.map(c => [c.id, c.stands]));
+const CAT_NAMES = Object.fromEntries(CONFIG.map(c => [c.id, c.name]));
+const CAT_ICONS = Object.fromEntries(CONFIG.map(c => [c.id, c.icon]));
+
+/* ═══════════════════════════════════════
+   INIT — genera la rejilla de categorías
+═══════════════════════════════════════ */
+function buildCategoryGrid() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = '';
+  CONFIG.forEach(cat => {
+    const div = document.createElement('div');
+    div.className = 'cat-card';
+    div.id = 'cat-' + cat.id;
+    div.innerHTML = `<div class="cat-icon">${cat.icon}</div>
+                     <div class="cat-name">${cat.name}</div>
+                     <div class="cat-desc">${cat.desc}</div>`;
+    div.onclick = () => pickCat(cat.id, div);
+    grid.appendChild(div);
+  });
+}
+
+/* ═══════════════════════════════════════
+   REDES SOCIALES
+═══════════════════════════════════════ */
+const socialVisited = new Set();
+
+function resetSocial() {
+  socialVisited.clear();
+  ['instagram','facebook','twitter','linkedin','tiktok'].forEach(id => {
+    document.getElementById('soc-' + id).classList.remove('visited');
+  });
+  document.getElementById('btn-social').classList.add('disabled');
+  document.getElementById('social-hint').innerHTML =
+    'Pulsa al menos <span>1 red social</span> para continuar';
+}
+
+function markSocial(id) {
+  // Pequeño retardo para que el enlace abra antes de actualizar la UI
+  setTimeout(() => {
+    socialVisited.add(id);
+    document.getElementById('soc-' + id).classList.add('visited');
+    const n = socialVisited.size;
+    document.getElementById('btn-social').classList.remove('disabled');
+    document.getElementById('social-hint').innerHTML =
+      '<span>' + n + ' red' + (n > 1 ? 'es visitadas' : ' visitada') + ' ✓</span>';
+  }, 300);
+}
+
+/* ═══════════════════════════════════════
+   REGISTRO PERSISTENTE (anti-duplicados)
+═══════════════════════════════════════ */
+function loadReg()    { try { return JSON.parse(localStorage.getItem('turexpo_reg')||'[]'); } catch { return []; } }
+function saveReg(r)   { localStorage.setItem('turexpo_reg', JSON.stringify(r)); }
+
+async function isDuplicate(name, phone) {
+  const list  = loadReg();
+  const nNorm = name.trim().toLowerCase();
+  const pNorm = phone.replace(/\s/g,'');
+  if (list.some(r => r.name === nNorm || r.phone === pNorm)) return true;
+
+  // Comprobación contra Supabase (evita duplicados entre dispositivos)
+  try {
+    const { data } = await db
+      .from('pasaporte_visitantes')
+      .select('id')
+      .eq('telefono', pNorm)
+      .limit(1);
+    if (data && data.length > 0) return true;
+  } catch (_) { /* si falla la red, continuamos con la comprobación local */ }
+
+  return false;
+}
+
+async function registerUser(name, phone) {
+  const pNorm = phone.replace(/\s/g,'');
+  // Guardar en localStorage (anti-duplicados local)
+  const list = loadReg();
+  list.push({ name: name.trim().toLowerCase(), phone: pNorm, ts: new Date().toISOString() });
+  saveReg(list);
+
+  // Guardar en Supabase
+  try {
+    const { error } = await db.from('pasaporte_visitantes').insert({
+      nombre:               name.trim(),
+      telefono:             pNorm,
+      categoria:            S.category,
+      stands_seleccionados: S.selStands,
+      stands_sellados:      S.stamped,
+      redes_sociales:       [...socialVisited]
+    });
+    if (error) console.error('Supabase insert error:', error.message);
+  } catch (e) {
+    console.error('Supabase error:', e);
+  }
+}
+
+/* ═══════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════ */
+let S = { name:'', phone:'', category:null, selStands:[], stamped:[] };
+let modalStandId = null;
+let modalCode    = '';
+let activeCatEl  = null;
+
+/* ═══════════════════════════════════════
+   NAVEGACIÓN
+═══════════════════════════════════════ */
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ═══════════════════════════════════════
+   REGISTRO
+═══════════════════════════════════════ */
+async function submitRegister() {
+  const name  = document.getElementById('inp-name').value.trim();
+  const phone = document.getElementById('inp-phone').value.trim();
+  const priv  = document.getElementById('priv-chk').checked;
+
+  ['name','phone','priv'].forEach(k => document.getElementById('err-'+k).textContent = '');
+  document.getElementById('inp-name').classList.remove('err');
+  document.getElementById('inp-phone').classList.remove('err');
+
+  let ok = true;
+
+  if (!name || name.length < 2) {
+    document.getElementById('err-name').textContent = 'Introduce tu nombre completo.';
+    document.getElementById('inp-name').classList.add('err');
+    ok = false;
+  }
+
+  const phoneClean = phone.replace(/\s/g,'');
+  if (!phoneClean || !/^[0-9]{9,}$/.test(phoneClean)) {
+    document.getElementById('err-phone').textContent = 'Introduce un teléfono válido (mínimo 9 dígitos).';
+    document.getElementById('inp-phone').classList.add('err');
+    ok = false;
+  }
+
+  if (!priv) {
+    document.getElementById('err-priv').textContent = 'Debes aceptar la política de privacidad.';
+    ok = false;
+  }
+
+  if (!ok) return;
+
+  // Bloquear botón mientras se verifica
+  const btnReg = document.querySelector('#screen-register .btn-navy');
+  btnReg.classList.add('disabled');
+  btnReg.textContent = 'Verificando…';
+
+  if (await isDuplicate(name, phoneClean)) {
+    document.getElementById('err-phone').textContent = '⚠️ Este nombre o teléfono ya está registrado en el sorteo.';
+    document.getElementById('inp-name').classList.add('err');
+    document.getElementById('inp-phone').classList.add('err');
+    btnReg.classList.remove('disabled');
+    btnReg.textContent = 'Siguiente →';
+    return;
+  }
+
+  btnReg.classList.remove('disabled');
+  btnReg.textContent = 'Siguiente →';
+  S.name  = name;
+  S.phone = phoneClean;
+  resetSocial();
+  go('social');
+}
+
+/* ═══════════════════════════════════════
+   CATEGORÍA
+═══════════════════════════════════════ */
+function pickCat(cat, el) {
+  if (activeCatEl) activeCatEl.classList.remove('selected');
+  el.classList.add('selected');
+  activeCatEl = el;
+  S.category = cat;
+  document.getElementById('btn-cat').classList.remove('disabled');
+}
+
+function submitCat() {
+  if (!S.category) return;
+  renderStands();
+  go('stands');
+}
+
+/* ═══════════════════════════════════════
+   STANDS
+═══════════════════════════════════════ */
+function renderStands() {
+  document.getElementById('stands-title').textContent =
+    CAT_ICONS[S.category] + ' Stands de ' + CAT_NAMES[S.category];
+  S.selStands = [];
+  refreshCount();
+
+  const list = document.getElementById('stands-list');
+  list.innerHTML = '';
+  STANDS[S.category].forEach(st => {
+    const div = document.createElement('div');
+    div.className = 'stand-row';
+    div.id = 'row-' + st.id;
+    div.innerHTML = `<div class="chk" id="chk-${st.id}"></div>
+                     <div>
+                       <div class="stand-row-name">${st.i} ${st.n}</div>
+                       <div class="stand-row-sub">${st.sub}</div>
+                     </div>`;
+    div.onclick = () => toggleStand(st.id);
+    list.appendChild(div);
+  });
+}
+
+function toggleStand(id) {
+  const idx = S.selStands.indexOf(id);
+  if (idx === -1) {
+    if (S.selStands.length >= 10) return;
+    S.selStands.push(id);
+    document.getElementById('row-' + id).classList.add('sel');
+    document.getElementById('chk-' + id).textContent = '✓';
+  } else {
+    S.selStands.splice(idx, 1);
+    document.getElementById('row-' + id).classList.remove('sel');
+    document.getElementById('chk-' + id).textContent = '';
+  }
+  refreshCount();
+  STANDS[S.category].forEach(st => {
+    const row = document.getElementById('row-' + st.id);
+    if (!row) return;
+    if (S.selStands.length >= 10 && !S.selStands.includes(st.id))
+      row.classList.add('dim');
+    else
+      row.classList.remove('dim');
+  });
+}
+
+function refreshCount() {
+  document.getElementById('sel-count').textContent = S.selStands.length;
+  const btn = document.getElementById('btn-confirm');
+  if (S.selStands.length === 10) btn.classList.remove('disabled');
+  else                           btn.classList.add('disabled');
+}
+
+function randomStands() {
+  S.selStands = [];
+  STANDS[S.category].forEach(st => {
+    const row = document.getElementById('row-' + st.id);
+    if (row) row.classList.remove('sel','dim');
+    const chk = document.getElementById('chk-' + st.id);
+    if (chk)  chk.textContent = '';
+  });
+  refreshCount();
+  [...STANDS[S.category]].sort(() => Math.random() - .5)
+    .slice(0, 10).forEach(st => toggleStand(st.id));
+}
+
+function confirmStands() {
+  if (S.selStands.length !== 10) return;
+  renderPassport();
+  go('passport');
+}
+
+/* ═══════════════════════════════════════
+   PASAPORTE
+═══════════════════════════════════════ */
+function renderPassport() {
+  document.getElementById('pp-name').textContent = S.name;
+  const badge = document.getElementById('pp-badge');
+  badge.textContent = CAT_ICONS[S.category] + ' ' + CAT_NAMES[S.category];
+  S.stamped = [];
+  updateProgress();
+
+  const grid = document.getElementById('stamp-grid');
+  grid.innerHTML = '';
+  S.selStands.forEach((id, i) => {
+    const st   = STANDS[S.category].find(s => s.id === id);
+    const card = document.createElement('div');
+    card.className = 'stamp-card';
+    card.id = 'sc-' + id;
+    card.innerHTML = `
+      <div class="sc-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="sc-ico">${st.i}</div>
+      <div class="sc-name">${st.n}</div>
+      <div class="sc-sub">${st.sub}</div>
+      <div class="sc-hint">Toca para sellar</div>
+      <div class="stamp-overlay">
+        <div class="stamp-seal">
+          <div class="seal-txt">Visitado</div>
+          <div class="seal-ico">${st.i}</div>
+        </div>
+      </div>`;
+    card.onclick = () => openModal(id);
+    grid.appendChild(card);
+  });
+}
+
+function updateProgress() {
+  const n = S.stamped.length;
+  document.getElementById('prog-txt').textContent = n + ' / 10';
+  document.getElementById('prog-bar').style.width = (n * 10) + '%';
+}
+
+/* ═══════════════════════════════════════
+   MODAL
+═══════════════════════════════════════ */
+function openModal(standId) {
+  if (S.stamped.includes(standId)) return;
+  const st = STANDS[S.category].find(s => s.id === standId);
+  modalStandId = standId;
+  modalCode = '';
+  document.getElementById('modal-stand').textContent = st.i + ' ' + st.n;
+  document.getElementById('modal-err').textContent = '';
+  ['d1','d2','d3','d4'].forEach(id => {
+    document.getElementById(id).value = '';
+    document.getElementById(id).classList.remove('shake');
+  });
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  modalStandId = null;
+  modalCode    = '';
+}
+
+function bgClose(e) {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
+}
+
+function npPress(d) {
+  if (modalCode.length >= 4) return;
+  modalCode += d;
+  syncDigits();
+}
+
+function npDel() {
+  modalCode = modalCode.slice(0, -1);
+  syncDigits();
+}
+
+function syncDigits() {
+  ['d1','d2','d3','d4'].forEach((id, i) => {
+    document.getElementById(id).value = modalCode[i] || '';
+    document.getElementById(id).classList.remove('shake');
+  });
+  document.getElementById('modal-err').textContent = '';
+}
+
+function verifyCode() {
+  if (modalCode.length !== 4) {
+    document.getElementById('modal-err').textContent = 'Introduce los 4 dígitos del código.';
+    return;
+  }
+  const st      = STANDS[S.category].find(s => s.id === modalStandId);
+  const stampId = modalStandId; // guardar antes de cerrar
+
+  if (modalCode === st.c) {
+    closeModal();
+    applyStamp(stampId);
+  } else {
+    document.getElementById('modal-err').textContent = '❌ Código incorrecto. Inténtalo de nuevo.';
+    ['d1','d2','d3','d4'].forEach(id => document.getElementById(id).classList.add('shake'));
+    modalCode = '';
+    setTimeout(() => {
+      ['d1','d2','d3','d4'].forEach(id => {
+        document.getElementById(id).value = '';
+        document.getElementById(id).classList.remove('shake');
+      });
+    }, 500);
+  }
+}
+
+/* ═══════════════════════════════════════
+   SELLAR
+═══════════════════════════════════════ */
+function applyStamp(id) {
+  S.stamped.push(id);
+  const card = document.getElementById('sc-' + id);
+  card.classList.add('done');
+  card.onclick = null;
+  updateProgress();
+  if (S.stamped.length === 10) setTimeout(showComplete, 900);
+}
+
+/* ═══════════════════════════════════════
+   COMPLETADO
+═══════════════════════════════════════ */
+function showComplete() {
+  // Mostrar pantalla de éxito inmediatamente
+  document.getElementById('done-name').textContent = S.name + '!';
+  go('complete');
+  // Guardar en Supabase en segundo plano
+  registerUser(S.name, S.phone);
+}
+
+/* ═══════════════════════════════════════
+   RESET
+═══════════════════════════════════════ */
+function resetApp() {
+  S = { name:'', phone:'', category:null, selStands:[], stamped:[] };
+  document.getElementById('inp-name').value   = '';
+  document.getElementById('inp-phone').value  = '';
+  document.getElementById('priv-chk').checked = false;
+  ['name','phone','priv'].forEach(k => document.getElementById('err-'+k).textContent = '');
+  document.getElementById('inp-name').classList.remove('err');
+  document.getElementById('inp-phone').classList.remove('err');
+  if (activeCatEl) activeCatEl.classList.remove('selected');
+  activeCatEl = null;
+  document.getElementById('btn-cat').classList.add('disabled');
+  resetSocial();
+  go('welcome');
+}
+
+// Arranque
+buildCategoryGrid();
+</script>
+</body>
+</html>

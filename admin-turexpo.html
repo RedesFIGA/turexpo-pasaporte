@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin · Pasaporte Turexpo</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #185FA5;
+      --blue:   #378ADD;
+      --bgblue: #E6F1FB;
+      --white:  #ffffff;
+      --text:   #1a2e42;
+      --muted:  #5a7a99;
+      --border: #c0d8f0;
+      --red:    #c0392b;
+      --green:  #1a7a4a;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #b8cfe8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── LOGIN ── */
+    #login-wrap {
+      display: flex;
+      min-height: 100vh;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(160deg, var(--navy) 0%, var(--blue) 60%, var(--navy) 100%);
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 44px 36px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 12px 48px rgba(0,0,0,.3);
+      text-align: center;
+    }
+
+    .login-logo {
+      font-size: 44px;
+      margin-bottom: 10px;
+    }
+
+    .login-brand {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .login-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .login-label {
+      display: block;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .login-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s;
+      margin-bottom: 20px;
+      letter-spacing: 3px;
+    }
+    .login-input:focus { border-color: var(--navy); }
+    .login-input.err   { border-color: var(--red); }
+
+    .login-err {
+      font-size: 13px;
+      color: var(--red);
+      margin-bottom: 14px;
+      min-height: 18px;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 15px;
+      background: var(--navy);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      box-shadow: 0 4px 16px rgba(24,95,165,.35);
+    }
+    .btn-login:hover  { opacity: .9; }
+    .btn-login:active { transform: scale(.97); }
+
+    /* ── ADMIN PANEL ── */
+    #admin-wrap {
+      display: none;
+      width: 100%;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .admin-header {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      color: var(--white);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .header-icon { font-size: 28px; }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .header-sub {
+      font-size: 12px;
+      opacity: .75;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-logout {
+      padding: 8px 18px;
+      background: rgba(255,255,255,.18);
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,.4);
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,.28); }
+
+    .btn-refresh {
+      padding: 8px 18px;
+      background: rgba(255,255,255,.18);
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,.4);
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-refresh:hover  { background: rgba(255,255,255,.28); }
+    .btn-refresh.spin .refresh-ico { animation: spin .7s linear; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Stats bar */
+    .stats-bar {
+      background: var(--white);
+      padding: 20px 32px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bgblue);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 24px;
+      min-width: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--white);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bgblue);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 16px;
+      flex: 1;
+      max-width: 340px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      width: 100%;
+    }
+
+    .search-icon { color: var(--muted); font-size: 14px; }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-select {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .btn-export {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: var(--navy);
+      color: var(--white);
+      border: none;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      box-shadow: 0 3px 10px rgba(24,95,165,.3);
+      white-space: nowrap;
+    }
+    .btn-export:hover  { opacity: .9; }
+    .btn-export:active { transform: scale(.97); }
+
+    /* Table */
+    .table-wrap {
+      flex: 1;
+      overflow-x: auto;
+      background: var(--white);
+      padding: 0 32px 32px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      min-width: 700px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--navy);
+      color: var(--white);
+      padding: 13px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { background: #1570b8; }
+    thead th .sort-ico { margin-left: 4px; opacity: .6; }
+
+    tbody tr {
+      border-bottom: 1px solid var(--bgblue);
+      transition: background .12s;
+    }
+    tbody tr:hover { background: var(--bgblue); }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td {
+      padding: 12px 14px;
+      color: var(--text);
+      vertical-align: middle;
+    }
+
+    .td-num {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      width: 40px;
+    }
+
+    .td-name { font-weight: 600; }
+
+    .td-phone {
+      font-family: monospace;
+      letter-spacing: .5px;
+    }
+
+    .badge-cat {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 50px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      background: var(--bgblue);
+      color: var(--navy);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .sellos-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sellos-count {
+      font-weight: 700;
+      font-size: 13px;
+      min-width: 36px;
+    }
+    .sellos-count.full { color: var(--green); }
+
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      min-width: 70px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--navy), var(--blue));
+      border-radius: 3px;
+      transition: width .3s;
+    }
+    .progress-fill.full { background: linear-gradient(90deg, #1a7a4a, #2ecc71); }
+
+    .td-date {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* Empty / loading states */
+    .state-row td {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin-bottom: 10px;
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 16px 32px;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .page-info { font-size: 13px; color: var(--muted); margin-right: 4px; }
+
+    .btn-page {
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--white);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .btn-page:hover    { background: var(--bgblue); }
+    .btn-page.active   { background: var(--navy); color: var(--white); border-color: var(--navy); }
+    .btn-page:disabled { opacity: .4; cursor: default; }
+
+    /* Footer */
+    .admin-footer {
+      background: var(--bgblue);
+      text-align: center;
+      padding: 14px;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .admin-header  { padding: 16px 16px; }
+      .stats-bar     { padding: 16px; gap: 12px; }
+      .toolbar       { padding: 12px 16px; }
+      .table-wrap    { padding: 0 0 24px; }
+      .pagination    { padding: 12px 16px; }
+      .stat-card     { min-width: 130px; padding: 12px 16px; }
+      .stat-value    { font-size: 26px; }
+      .login-card    { margin: 24px 16px; padding: 36px 24px; }
+    }
+
+    /* Live dot */
+    .live-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: #2ecc71;
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+      margin-right: 4px;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(.7); }
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--navy);
+      color: var(--white);
+      padding: 13px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 6px 24px rgba(0,0,0,.25);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .3s;
+      z-index: 999;
+      max-width: 300px;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LOGIN ═══════════════════════════════ -->
+<div id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">🔒</div>
+    <div class="login-brand">Turexpo Galicia</div>
+    <h1 class="login-title">Panel de Administración</h1>
+    <p class="login-sub">Acceso restringido al equipo organizador</p>
+
+    <label class="login-label" for="pwd-input">Contraseña</label>
+    <input
+      type="password"
+      id="pwd-input"
+      class="login-input"
+      placeholder="••••••••"
+      autocomplete="current-password"
+      onkeydown="if(event.key==='Enter') doLogin()"
+    >
+    <div class="login-err" id="login-err"></div>
+    <button class="btn-login" onclick="doLogin()">Entrar al panel</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ ADMIN PANEL ═══════════════════════════════ -->
+<div id="admin-wrap">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div class="header-left">
+      <div class="header-icon">🛂</div>
+      <div>
+        <div class="header-title">Panel Administración · Pasaporte Turexpo</div>
+        <div class="header-sub">Turexpo Galicia — Solo uso interno del equipo organizador</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-refresh" onclick="refreshData()" title="Actualizar datos">
+        <span class="refresh-ico">↻</span> Actualizar
+      </button>
+      <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-label"><span class="live-dot"></span>Participantes totales</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub">inscritos en el sorteo</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pasaportes completos</div>
+      <div class="stat-value" id="stat-full">—</div>
+      <div class="stat-sub">10 sellos completados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Promedio sellos</div>
+      <div class="stat-value" id="stat-avg">—</div>
+      <div class="stat-sub">por participante</div>
+    </div>
+    <div class="stat-card" id="stat-last-card">
+      <div class="stat-label">Último registro</div>
+      <div class="stat-value" style="font-size:16px;margin-top:4px" id="stat-last">—</div>
+      <div class="stat-sub" id="stat-last-time"></div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="search-input"
+        placeholder="Buscar por nombre o teléfono…"
+        oninput="applyFilters()"
+      >
+    </div>
+    <div class="filter-group">
+      <select class="filter-select" id="filter-cat" onchange="applyFilters()">
+        <option value="">Todas las categorías</option>
+      </select>
+      <select class="filter-select" id="filter-sellos" onchange="applyFilters()">
+        <option value="">Todos los sellos</option>
+        <option value="full">Completos (10)</option>
+        <option value="partial">Incompletos</option>
+      </select>
+    </div>
+    <button class="btn-export" onclick="exportCSV()">
+      ⬇ Exportar CSV
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th class="td-num" onclick="sortBy('idx')">#</th>
+          <th onclick="sortBy('nombre')">Nombre <span class="sort-ico" id="sort-nombre"></span></th>
+          <th onclick="sortBy('telefono')">Teléfono <span class="sort-ico" id="sort-telefono"></span></th>
+          <th onclick="sortBy('categoria')">Categoría <span class="sort-ico" id="sort-categoria"></span></th>
+          <th onclick="sortBy('sellos')">Sellos <span class="sort-ico" id="sort-sellos"></span></th>
+          <th onclick="sortBy('fecha')">Fecha de registro <span class="sort-ico" id="sort-fecha"></span></th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr class="state-row">
+          <td colspan="6">
+            <div class="spinner"></div>
+            <br>Cargando datos…
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" id="pagination"></div>
+
+  <!-- Footer -->
+  <div class="admin-footer">
+    Panel de administración · Pasaporte Turexpo Galicia · Solo uso interno
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   CONFIGURACIÓN
+══════════════════════════════════════════ */
+const ADMIN_PASSWORD  = 'turexpo2025';          // ← Cambia esta contraseña
+const SUPABASE_URL    = 'https://anscixtznmawcqbfadww.supabase.co';
+const SUPABASE_KEY    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFuc2NpeHR6bm1hd2NxYmZhZHd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MDAyMzMsImV4cCI6MjA5MTQ3NjIzM30.yKJytwYjy4wUcCl8ez9exODmN3PC9v50yRnVBs-hyP0';
+const PAGE_SIZE       = 25;
+const SESSION_KEY     = 'turexpo_admin_auth';
+const MAX_SELLOS      = 10;
+const AUTO_REFRESH_MS = 60000; // actualización automática cada 60 s
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ══════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════ */
+let allRows       = [];   // todos los registros de Supabase
+let filteredRows  = [];   // después de buscar/filtrar
+let currentPage   = 1;
+let sortCol       = 'fecha';
+let sortDir       = 'desc';
+let autoRefreshId = null;
+
+/* ══════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════ */
+function doLogin() {
+  const val = document.getElementById('pwd-input').value;
+  const err = document.getElementById('login-err');
+  const inp = document.getElementById('pwd-input');
+
+  if (val === ADMIN_PASSWORD) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    err.textContent = '';
+    inp.classList.remove('err');
+    showPanel();
+  } else {
+    err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+    inp.classList.add('err');
+    inp.value = '';
+    inp.focus();
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  if (autoRefreshId) clearInterval(autoRefreshId);
+  document.getElementById('admin-wrap').style.display = 'none';
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('pwd-input').value = '';
+}
+
+function showPanel() {
+  document.getElementById('login-wrap').style.display  = 'none';
+  document.getElementById('admin-wrap').style.display  = 'flex';
+  loadData();
+  autoRefreshId = setInterval(loadData, AUTO_REFRESH_MS);
+}
+
+/* ══════════════════════════════════════════
+   CARGA DE DATOS (Supabase)
+══════════════════════════════════════════ */
+async function loadData() {
+  try {
+    const { data, error } = await db
+      .from('pasaporte_visitantes')
+      .select('id, nombre, telefono, categoria, stands_sellados, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    allRows = (data || []).map((r, i) => ({
+      idx:      i + 1,
+      nombre:   r.nombre   || '—',
+      telefono: r.telefono || '—',
+      categoria:r.categoria|| '—',
+      sellos:   Array.isArray(r.stands_sellados) ? r.stands_sellados.length : 0,
+      fecha:    r.created_at || '',
+      raw:      r
+    }));
+
+    updateStats();
+    buildCategoryFilter();
+    applyFilters();
+
+  } catch (e) {
+    console.error('Error al cargar datos:', e);
+    document.getElementById('table-body').innerHTML =
+      `<tr class="state-row"><td colspan="6">⚠️ Error al conectar con Supabase.<br><small>${e.message}</small></td></tr>`;
+    showToast('Error al actualizar los datos');
+  }
+}
+
+async function refreshData() {
+  const btn = document.querySelector('.btn-refresh');
+  btn.classList.add('spin');
+  await loadData();
+  setTimeout(() => btn.classList.remove('spin'), 700);
+  showToast('Datos actualizados');
+}
+
+/* ══════════════════════════════════════════
+   ESTADÍSTICAS
+══════════════════════════════════════════ */
+function updateStats() {
+  const total = allRows.length;
+  const full  = allRows.filter(r => r.sellos >= MAX_SELLOS).length;
+  const avg   = total > 0
+    ? (allRows.reduce((s, r) => s + r.sellos, 0) / total).toFixed(1)
+    : '0';
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-full').textContent  = full;
+  document.getElementById('stat-avg').textContent   = avg;
+
+  if (allRows.length > 0) {
+    // El más reciente está primero (ordenado desc en la query)
+    const last = allRows[0];
+    document.getElementById('stat-last').textContent      = last.nombre;
+    document.getElementById('stat-last-time').textContent = formatDate(last.fecha, true);
+  }
+}
+
+/* ══════════════════════════════════════════
+   FILTROS Y BÚSQUEDA
+══════════════════════════════════════════ */
+function buildCategoryFilter() {
+  const cats = [...new Set(allRows.map(r => r.categoria).filter(Boolean))].sort();
+  const sel  = document.getElementById('filter-cat');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Todas las categorías</option>';
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    if (c === prev) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function applyFilters() {
+  const q      = document.getElementById('search-input').value.toLowerCase().trim();
+  const cat    = document.getElementById('filter-cat').value;
+  const sellos = document.getElementById('filter-sellos').value;
+
+  filteredRows = allRows.filter(r => {
+    const matchQ = !q || r.nombre.toLowerCase().includes(q) || r.telefono.includes(q);
+    const matchC = !cat || r.categoria === cat;
+    const matchS = !sellos
+      || (sellos === 'full'    && r.sellos >= MAX_SELLOS)
+      || (sellos === 'partial' && r.sellos < MAX_SELLOS);
+    return matchQ && matchC && matchS;
+  });
+
+  // Renumerar
+  filteredRows.forEach((r, i) => { r.displayIdx = i + 1; });
+
+  sortRows();
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+}
+
+/* ══════════════════════════════════════════
+   ORDENACIÓN
+══════════════════════════════════════════ */
+function sortBy(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortCol = col;
+    sortDir = col === 'fecha' ? 'desc' : 'asc';
+  }
+  sortRows();
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+  updateSortIcons();
+}
+
+function sortRows() {
+  filteredRows.sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (sortCol === 'fecha') { va = new Date(va); vb = new Date(vb); }
+    if (sortCol === 'sellos') { va = +va; vb = +vb; }
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ?  1 : -1;
+    return 0;
+  });
+}
+
+function updateSortIcons() {
+  ['nombre','telefono','categoria','sellos','fecha'].forEach(col => {
+    const el = document.getElementById('sort-' + col);
+    if (!el) return;
+    el.textContent = sortCol === col ? (sortDir === 'asc' ? '↑' : '↓') : '';
+  });
+}
+
+/* ══════════════════════════════════════════
+   RENDERIZAR TABLA
+══════════════════════════════════════════ */
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+
+  if (filteredRows.length === 0) {
+    tbody.innerHTML = `<tr class="state-row"><td colspan="6">
+      ${allRows.length === 0 ? '📭 Todavía no hay participantes registrados.' : '🔍 Sin resultados para los filtros aplicados.'}
+    </td></tr>`;
+    return;
+  }
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const slice = filteredRows.slice(start, start + PAGE_SIZE);
+
+  tbody.innerHTML = slice.map((r, i) => {
+    const pct     = Math.min(100, Math.round((r.sellos / MAX_SELLOS) * 100));
+    const isFull  = r.sellos >= MAX_SELLOS;
+    const fillCls = isFull ? 'full' : '';
+    const cntCls  = isFull ? 'full' : '';
+
+    return `<tr>
+      <td class="td-num">${start + i + 1}</td>
+      <td class="td-name">${escHtml(r.nombre)}</td>
+      <td class="td-phone">${escHtml(r.telefono)}</td>
+      <td><span class="badge-cat">${escHtml(r.categoria)}</span></td>
+      <td>
+        <div class="sellos-bar">
+          <span class="sellos-count ${cntCls}">${r.sellos}/${MAX_SELLOS}</span>
+          <div class="progress-track">
+            <div class="progress-fill ${fillCls}" style="width:${pct}%"></div>
+          </div>
+        </div>
+      </td>
+      <td class="td-date">${formatDate(r.fecha)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   PAGINACIÓN
+══════════════════════════════════════════ */
+function renderPagination() {
+  const total = filteredRows.length;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const pag   = document.getElementById('pagination');
+
+  if (pages <= 1) { pag.innerHTML = ''; return; }
+
+  const start = (currentPage - 1) * PAGE_SIZE + 1;
+  const end   = Math.min(currentPage * PAGE_SIZE, total);
+
+  let html = `<span class="page-info">Mostrando ${start}–${end} de ${total}</span>`;
+
+  html += `<button class="btn-page" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Ant.</button>`;
+
+  // Páginas cercanas
+  const radius = 2;
+  for (let p = 1; p <= pages; p++) {
+    if (p === 1 || p === pages || (p >= currentPage - radius && p <= currentPage + radius)) {
+      html += `<button class="btn-page ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+    } else if (p === currentPage - radius - 1 || p === currentPage + radius + 1) {
+      html += `<span style="padding:0 4px;color:var(--muted)">…</span>`;
+    }
+  }
+
+  html += `<button class="btn-page" onclick="goPage(${currentPage + 1})" ${currentPage === pages ? 'disabled' : ''}>Sig. →</button>`;
+  pag.innerHTML = html;
+}
+
+function goPage(p) {
+  const pages = Math.ceil(filteredRows.length / PAGE_SIZE);
+  if (p < 1 || p > pages) return;
+  currentPage = p;
+  renderTable();
+  renderPagination();
+  document.querySelector('.table-wrap').scrollTop = 0;
+}
+
+/* ══════════════════════════════════════════
+   EXPORTAR CSV
+══════════════════════════════════════════ */
+function exportCSV() {
+  const rows = filteredRows.length > 0 ? filteredRows : allRows;
+  if (rows.length === 0) { showToast('No hay datos para exportar'); return; }
+
+  const header = ['#', 'Nombre', 'Teléfono', 'Categoría', 'Sellos completados', 'Fecha de registro'];
+  const lines  = [header.join(';')];
+
+  rows.forEach((r, i) => {
+    lines.push([
+      i + 1,
+      csvEsc(r.nombre),
+      csvEsc(r.telefono),
+      csvEsc(r.categoria),
+      r.sellos,
+      formatDate(r.fecha)
+    ].join(';'));
+  });
+
+  const bom  = '\uFEFF';  // BOM para que Excel abra con tildes correctamente
+  const blob = new Blob([bom + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const ts   = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `turexpo-sorteo-${ts}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Exportados ${rows.length} participantes`);
+}
+
+/* ══════════════════════════════════════════
+   UTILIDADES
+══════════════════════════════════════════ */
+function formatDate(iso, short = false) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    if (short) {
+      const diff = Math.round((Date.now() - d) / 60000);
+      if (diff < 1)   return 'Ahora mismo';
+      if (diff < 60)  return `Hace ${diff} min`;
+      if (diff < 1440)return `Hace ${Math.round(diff/60)} h`;
+    }
+    return d.toLocaleString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch { return iso; }
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function csvEsc(val) {
+  const s = String(val ?? '');
+  return s.includes(';') || s.includes('"') || s.includes('\n')
+    ? `"${s.replace(/"/g,'""')}"` : s;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ══════════════════════════════════════════
+   ARRANQUE
+══════════════════════════════════════════ */
+// Si ya había sesión activa (recarga de página) saltamos el login
+if (sessionStorage.getItem(SESSION_KEY) === '1') {
+  showPanel();
+}
+
+// Enter en el campo de contraseña ya configurado en el HTML
+</script>
+</body>
+</html>
